@@ -1,5 +1,5 @@
 var camera, scene, renderer;
-var geometry, material, mesh;
+var cubeGeometry, material, cubeMesh;
 var move = 0;
 
 window.onload = function() {
@@ -9,20 +9,19 @@ window.onload = function() {
 
 	scene = new THREE.Scene();
 
-	geometry = new THREE.CubeGeometry( 200, 200, 200 );
-	secondGeometry = new THREE.TorusGeometry( 150, 35, 24, 36 );
-	thirdGeometry = new THREE.SphereGeometry( 150, 25, 25 );
+	cubeGeometry = new THREE.CubeGeometry( 200, 200, 200 );
+	torusGeometry = new THREE.TorusGeometry( 150, 35, 24, 36 );
+	sphereGeometry = new THREE.SphereGeometry( 150, 25, 25 );
 
 	material = new THREE.MeshLambertMaterial( { color: 0x24D330, shading: THREE.FlatShading, overdraw: true } );	
 
-	mesh = new THREE.Mesh( geometry, material );	
-	secondMesh = new THREE.Mesh( secondGeometry, material );
-	thirdMesh = new THREE.Mesh( thirdGeometry, material );
+	cubeMesh = new THREE.Mesh( cubeGeometry, material );	
+	torusMesh = new THREE.Mesh( torusGeometry, material );
+	sphereMesh = new THREE.Mesh( sphereGeometry, material );
 
-	scene.add( mesh );
-	scene.add( secondMesh );
-	scene.add( thirdMesh) ;
-	scene.add( groundMesh );
+	scene.add( cubeMesh );
+	scene.add( torusMesh );
+	scene.add( sphereMesh) ;
 
 	var light = new THREE.PointLight( 0xFFFF00 );
 	light.position.set( 0, 0, 1000 );
@@ -35,11 +34,9 @@ window.onload = function() {
 
 	container.appendChild( renderer.domElement );
 
-	secondMesh.position.x -= 50;
-	thirdMesh.position.x -= 350;
-	thirdMesh.position.z -= 300;
-	groundMesh.position.y -= 700;
-	groundMesh.rotation.x -= Math.pi;
+	torusMesh.position.x -= 50;
+	sphereMesh.position.x -= 350;
+	sphereMesh.position.z -= 300;
 
 	animate();
 };
@@ -49,18 +46,18 @@ function animate() {
 
 	requestAnimationFrame( animate );
 
-	mesh.rotation.x += 0.01;
-	mesh.rotation.y += 0.02;
-	mesh.position.x = 400 * Math.cos(move);
-	mesh.position.y = 400 * Math.sin(move);
+	cubeMesh.rotation.x += 0.01;
+	cubeMesh.rotation.y += 0.02;
+	cubeMesh.position.x = 400 * Math.cos(move);
+	cubeMesh.position.y = 400 * Math.sin(move);
 
-	secondMesh.rotation.x -= 0.01;
-	secondMesh.rotation.y -= 0.02;
+	torusMesh.rotation.x -= 0.01;
+	torusMesh.rotation.y -= 0.02;
 
-	thirdMesh.rotation.x += 0.02;
-	thirdMesh.rotation.y += 0.04;
-	thirdMesh.position.x = 550 * Math.cos(move*0.75);
-	thirdMesh.position.y = 550 * -Math.sin(move*0.75);
+	sphereMesh.rotation.x += 0.02;
+	sphereMesh.rotation.y += 0.04;
+	sphereMesh.position.x = 550 * Math.cos(move*0.75);
+	sphereMesh.position.y = 550 * -Math.sin(move*0.75);
 
 	renderer.render( scene, camera );
 };

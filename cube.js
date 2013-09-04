@@ -15,11 +15,10 @@ window.onload = function() {
 	groundGeometry = new THREE.PlaneGeometry( 800, 800 );
 
 	material = new THREE.MeshLambertMaterial( { color: 0x24D330, shading: THREE.FlatShading, overdraw: true } );	
-	planeMaterial = new THREE.MeshNormalMaterial( { color: 0x00ff00 } );
+
 	mesh = new THREE.Mesh( geometry, material );	
 	secondMesh = new THREE.Mesh( secondGeometry, material );
 	thirdMesh = new THREE.Mesh( thirdGeometry, material );
-	groundMesh = new THREE.Mesh( groundGeometry, planeMaterial );
 
 	scene.add( mesh );
 	scene.add( secondMesh );

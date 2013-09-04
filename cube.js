@@ -12,7 +12,6 @@ window.onload = function() {
 	geometry = new THREE.CubeGeometry( 200, 200, 200 );
 	secondGeometry = new THREE.TorusGeometry( 150, 35, 24, 36 );
 	thirdGeometry = new THREE.SphereGeometry( 150, 25, 25 );
-	groundGeometry = new THREE.PlaneGeometry( 800, 800 );
 
 	material = new THREE.MeshLambertMaterial( { color: 0x24D330, shading: THREE.FlatShading, overdraw: true } );	
 

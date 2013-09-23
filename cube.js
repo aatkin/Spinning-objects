@@ -1,5 +1,7 @@
 var camera, scene, renderer;
 var cubeGeometry, torusGeometry, sphereGeometry, phongMaterial, vaadinMaterial, cubeMesh, torusMesh, sphereMesh, ambientLight, light;
+var solidGround;
+var controls;
 var move = 0;
 
 // Main function, fires up the script as soon as the entire page has loaded
@@ -10,11 +12,16 @@ window.onload = function() {
 
 	camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 1, 10000 );
 	camera.position.z = 1100;
+	camera.position.y = 550;
 
 	// WebGLRenderer() seems to be most efficient renderer, while lacking in portability,
 	// it makes up for in speed. Use CanvasRenderer() to render on most devices capable for WebGL.
-	renderer = new THREE.WebGLRenderer( { antialias: true } );
+	renderer = new THREE.WebGLRenderer();
 	renderer.setSize( window.innerWidth/1.5, window.innerHeight/1.5 );
+	renderer.shadowMapEnabled = true;
+	//renderer.shadowMapSoft = true;
+
+	controls = new THREE.OrbitControls( camera, renderer.domElement );
 
 	var container = document.getElementById('container');
 	container.appendChild( renderer.domElement );
@@ -32,19 +39,42 @@ function initializeObjects() {
 	phongMaterial.color.setHex( 0x24D330 );
 	phongMaterial.specular.setRGB( 0.5, 0.5, 0.5 );	
 
-	vaadinMaterial = new THREE.MeshLambertMaterial( { map: THREE.ImageUtils.loadTexture("../vaadin.png") } );
-
-	cubeMesh = new THREE.Mesh( cubeGeometry, vaadinMaterial );	
+	// vaadinMaterial = new THREE.MeshLambertMaterial( { map: THREE.ImageUtils.loadTexture("../vaadin.png") } );
+	cubeMesh = new THREE.Mesh( cubeGeometry, phongMaterial );	
 	torusMesh = new THREE.Mesh( torusGeometry, phongMaterial );
 	sphereMesh = new THREE.Mesh( sphereGeometry, phongMaterial );
 
+	solidGround = new THREE.Mesh(
+			new THREE.PlaneGeometry( 10000, 10000 ),
+			new THREE.MeshPhongMaterial( { color: 0xFFFFFF,  }) );
+	solidGround.position.y -= 750;
+	solidGround.rotation.x = -Math.PI / 2;
+	solidGround.receiveShadow = true;
+
 	ambientLight = new THREE.AmbientLight( 0x222222 );
 	light = new THREE.DirectionalLight( 0xFFFFFF, 0.7 );
-};
+}
 
 // Initializes the scene and sets up all the objects inside it, with their initial locations
 function setUpScene() {
 	scene = new THREE.Scene();
+
+	light.position.set( 200, 850, 200 );
+	light.castShadow = true;
+	//light.shadowCameraVisible = true;
+	light.shadowCameraLeft = -1100;
+	light.shadowCameraRight = 1100;
+	light.shadowCameraTop = 1100;
+	light.shadowCameraBottom = -1100;
+
+	cubeMesh.receiveShadow = true;
+	cubeMesh.castShadow = true;
+
+	torusMesh.receiveShadow = true;
+	torusMesh.castShadow = true;
+
+	sphereMesh.receiveShadow = true;
+	sphereMesh.castShadow = true;
 
 	scene.add( cubeMesh );
 	scene.add( torusMesh );
@@ -53,16 +83,16 @@ function setUpScene() {
 	scene.add( ambientLight );
 	scene.add( light );
 
-	torusMesh.position.x -= 50;
-	sphereMesh.position.x -= 350;
-	sphereMesh.position.z -= 300;
+	torusMesh.position = new THREE.Vector3( -50, 550, 0 );
+	sphereMesh.position = new THREE.Vector3( 350, 550, 0 );
+	sphereMesh.position = new THREE.Vector3( 0, 550, -300 );
 
-	light.position.set( 0, 0, 200 );
-};
+	scene.add( solidGround );
+}
 
 // Calculates positions for all the objects per each rendered frame
 function animate() {
-	move += 0.023;
+	move += 0.025;
 
 	requestAnimationFrame( animate );
 
@@ -70,7 +100,7 @@ function animate() {
 	cubeMesh.rotation.y += 0.5 * (Math.PI / 180);
 	cubeMesh.position.x = 1000 * Math.cos(move);
 	cubeMesh.position.y = 150 * Math.sin(move);
-	cubeMesh.position.z = 450 * Math.sin(move);
+	cubeMesh.position.z = 750 * Math.sin(move);
 
 	torusMesh.rotation.x -= 0.75 * (Math.PI / 180);
 	torusMesh.rotation.y -= 1.5 * (Math.PI / 180);
@@ -80,4 +110,5 @@ function animate() {
 	sphereMesh.position.y = 550 * -Math.sin(move*0.75);
 
 	renderer.render( scene, camera );
-};
+	controls.update();
+}

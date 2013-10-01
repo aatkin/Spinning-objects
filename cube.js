@@ -40,9 +40,12 @@ function initializeObjects() {
 	phongMaterial.specular.setRGB( 0.5, 0.5, 0.5 );	
 
 	// vaadinMaterial = new THREE.MeshLambertMaterial( { map: THREE.ImageUtils.loadTexture("../vaadin.png") } );
+	earthMaterial = new THREE.MeshPhongMaterial( { map: THREE.ImageUtils.loadTexture("../earthmap1k.png"), shininess: 100 } );
+	earthMaterial.color.setHex( 0xFFFFFF );
+	earthMaterial.specular.setRGB( 0.5, 0.5, 0.5 );
 	cubeMesh = new THREE.Mesh( cubeGeometry, phongMaterial );	
 	torusMesh = new THREE.Mesh( torusGeometry, phongMaterial );
-	sphereMesh = new THREE.Mesh( sphereGeometry, phongMaterial );
+	sphereMesh = new THREE.Mesh( sphereGeometry, earthMaterial );
 
 	solidGround = new THREE.Mesh(
 			new THREE.PlaneGeometry( 10000, 10000 ),
@@ -106,8 +109,10 @@ function animate() {
 	torusMesh.rotation.y -= 1.5 * (Math.PI / 180);
 	torusMesh.position.y = 10 * Math.sin(move);
 
-	sphereMesh.position.x = 400 * Math.cos(move*0.75);
-	sphereMesh.position.y = 550 * -Math.sin(move*0.75);
+	// sphereMesh.position.x = 400 * Math.cos(move*0.75);
+	// sphereMesh.position.y = 550 * -Math.sin(move*0.75);
+	sphereMesh.rotation.x += 0.5 * (Math.PI / 180);
+	sphereMesh.rotation.y += 0.5 * (Math.PI / 180);
 
 	renderer.render( scene, camera );
 	controls.update();

@@ -16,10 +16,10 @@ window.onload = function() {
 
 	// WebGLRenderer() seems to be most efficient renderer, while lacking in portability,
 	// it makes up for in speed. Use CanvasRenderer() to render on most devices capable for WebGL.
-	renderer = new THREE.WebGLRenderer();
+	renderer = new THREE.WebGLRenderer( { antialias: true } );
 	renderer.setSize( window.innerWidth/1.5, window.innerHeight/1.5 );
 	renderer.shadowMapEnabled = true;
-	//renderer.shadowMapSoft = true;
+	// 	renderer.shadowMapSoft = true;
 
 	controls = new THREE.OrbitControls( camera, renderer.domElement );
 
@@ -39,10 +39,8 @@ function initializeObjects() {
 	phongMaterial.color.setHex( 0x24D330 );
 	phongMaterial.specular.setRGB( 0.5, 0.5, 0.5 );	
 
-	// vaadinMaterial = new THREE.MeshLambertMaterial( { map: THREE.ImageUtils.loadTexture("../vaadin.png") } );
 	earthMaterial = new THREE.MeshPhongMaterial();
 	earthMaterial.map = THREE.ImageUtils.loadTexture('../images/earthmap1k.png');
-	//earthMaterial.color.setHex( 0xFFFFFF );
 	earthMaterial.bumpMap = THREE.ImageUtils.loadTexture('../images/earthbump1k.png');
 	earthMaterial.bumpScale = 32;
 	earthMaterial.specularMap = THREE.ImageUtils.loadTexture('../images/earthspec1k.png');
@@ -51,16 +49,76 @@ function initializeObjects() {
 	cubeMesh = new THREE.Mesh( cubeGeometry, phongMaterial );	
 	torusMesh = new THREE.Mesh( torusGeometry, phongMaterial );
 	sphereMesh = new THREE.Mesh( sphereGeometry, earthMaterial );
+	cloudMesh = createEarthCloud();
+	sphereMesh.add( cloudMesh );
 
 	solidGround = new THREE.Mesh(
 			new THREE.PlaneGeometry( 10000, 10000 ),
-			new THREE.MeshPhongMaterial( { color: 0xFFFFFF,  }) );
+			new THREE.MeshPhongMaterial( { color: 0xFFFFFF  } ) );
 	solidGround.position.y -= 750;
 	solidGround.rotation.x = -Math.PI / 2;
 	solidGround.receiveShadow = true;
 
 	ambientLight = new THREE.AmbientLight( 0x222222 );
 	light = new THREE.DirectionalLight( 0xFFFFFF, 0.7 );
+}
+
+function createEarthCloud() {
+	// create destination canvas
+	var canvasResult	= document.createElement("canvas");
+	canvasResult.width	= 1024;
+	canvasResult.height	= 512;
+	var contextResult	= canvasResult.getContext("2d");	
+
+	// load earthcloudmap
+	var imageMap	= new Image();
+	imageMap.addEventListener("load", function() {
+
+		// create dataMap ImageData for earthcloudmap
+		var canvasMap	= document.createElement("canvas");
+		canvasMap.width	= imageMap.width;
+		canvasMap.height= imageMap.height;
+		var contextMap	= canvasMap.getContext("2d");
+		contextMap.drawImage(imageMap, 0, 0);
+		var dataMap	= contextMap.getImageData(0, 0, canvasMap.width, canvasMap.height);
+
+		// load earthcloudmaptrans
+		var imageTrans	= new Image();
+		imageTrans.addEventListener("load", function(){
+			// create dataTrans ImageData for earthcloudmaptrans
+			var canvasTrans	= document.createElement("canvas");
+			canvasTrans.width	= imageTrans.width;
+			canvasTrans.height	= imageTrans.height;
+			var contextTrans	= canvasTrans.getContext("2d");
+			contextTrans.drawImage(imageTrans, 0, 0);
+			var dataTrans	= contextTrans.getImageData(0, 0, canvasTrans.width, canvasTrans.height);
+			//  merge dataMap + dataTrans into dataResult
+			var dataResult	= contextMap.createImageData(canvasMap.width, canvasMap.height);
+			for(var y = 0, offset = 0; y < imageMap.height; y++){
+				for(var x = 0; x < imageMap.width; x++, offset += 4){
+					dataResult.data[offset+0]	= dataMap.data[offset+0];
+					dataResult.data[offset+1]	= dataMap.data[offset+1];
+					dataResult.data[offset+2]	= dataMap.data[offset+2];
+					dataResult.data[offset+3]	= 255 - dataTrans.data[offset+0];
+				};
+			};
+			// update texture with result
+			contextResult.putImageData(dataResult,0,0);	
+			material.map.needsUpdate = true;
+		})
+		imageTrans.src	= "../images/earthcloudmaptrans.png";
+	}, false);
+	imageMap.src	= "../images/earthcloudmap.png";
+
+	var geometry	= new THREE.SphereGeometry(152, 25, 25)
+		var material	= new THREE.MeshPhongMaterial({
+			map	: new THREE.Texture(canvasResult),
+		    side	: THREE.DoubleSide,
+		    transparent	: true,
+		    opacity	: 0.8,
+		});
+	var mesh	= new THREE.Mesh(geometry, material);
+	return mesh;	
 }
 
 // Initializes the scene and sets up all the objects inside it, with their initial locations
@@ -96,6 +154,9 @@ function setUpScene() {
 	sphereMesh.position = new THREE.Vector3( 0, 550, -300 );
 
 	scene.add( solidGround );
+
+	sphereMesh.rotation.x = 23.4 * (Math.PI / 180);
+	cloudMesh.rotation.x = 23.4 * (Math.PI / 180);
 }
 
 // Calculates positions for all the objects per each rendered frame
@@ -116,8 +177,11 @@ function animate() {
 
 	// sphereMesh.position.x = 400 * Math.cos(move*0.75);
 	// sphereMesh.position.y = 550 * -Math.sin(move*0.75);
-	 sphereMesh.rotation.x += 0.5 * (Math.PI / 180);
-	 sphereMesh.rotation.y += 0.5 * (Math.PI / 180);
+	// sphereMesh.rotation.z += 0.1 * (Math.PI / 180);
+	sphereMesh.rotation.y += 0.15 * (Math.PI / 180);
+
+	cloudMesh.rotation.z += 0.1 * (Math.PI / 180);
+	// cloudMesh.rotation.y += 0.15 * (Math.PI / 180);
 
 	renderer.render( scene, camera );
 	controls.update();

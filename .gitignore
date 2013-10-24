@@ -1,0 +1,16 @@
+# Created by http://gitignore.io
+
+### IntelliJ ###
+*.iml
+*.ipr
+*.iws
+.idea/
+
+### Other stuff ###
+*.png
+*.jpg
+fireball.js
+keypress-1.0.8.min.js
+objects.js
+PointerLockControls.js
+shadertest.html

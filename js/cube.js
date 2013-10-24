@@ -1,10 +1,11 @@
 var camera, scene, renderer, controls, container, composer;
 var earthGeometry, earthMaterial, earthMesh, cloudMesh, starfieldGeometry, starfieldMaterial, starfieldTexture, starfieldMesh, ambientLight, light,
     sunGeometry, sunMaterial, sunMesh, jupiterGeometry, jupiterMaterial, jupiterMesh, neptuneGeometry, neptuneMaterial, neptuneMesh, marsGeometry,
-    marsMaterial, marsMesh;
-var sunSize, earthSize, jupiterSize, neptuneSize, marsSize;
+    marsMaterial, marsMesh, mercuryGeometry, mercuryMaterial, mercuryMesh, venusMesh, venusGeometry, venusMaterial;
+var sunSize, earthSize, jupiterSize, neptuneSize, marsSize, mercurySize, venusSize;
 var uniforms, delta, effectController, gui, stats;
-var earthMoveSpeed = 0, earthOrbitDistance, jupiterMoveSpeed = 0, jupiterOrbitDistance, neptuneMoveSpeed = 0, neptuneOrbitDistance, marsMoveSpeed = 0, marsOrbitDistance;
+var earthMoveSpeed = 0, earthOrbitDistance, jupiterMoveSpeed = 0, jupiterOrbitDistance, neptuneMoveSpeed = 0, neptuneOrbitDistance, marsMoveSpeed = 0, marsOrbitDistance,
+    mercuryMoveSpeed = 0, mercuryOrbitDistance, venusMoveSpeed = 0, venusOrbitDistance;
 var clock = new THREE.Clock();
 //var windowsPath = 'C:/Users/Anssi/Desktop/koulujutut/Harjoitustyö/Space simulation/images/';
 var unixPath = '../images/';
@@ -64,6 +65,8 @@ function initializeObjects() {
     jupiterSize = sunSize / 9.735;
     neptuneSize = sunSize / 56.21;
     marsSize = sunSize / 205.04;
+    mercurySize = sunSize / 285.42;
+    venusSize = sunSize / 115.06;
 
     /*
      Initialize starfield background on a cube
@@ -154,6 +157,32 @@ function initializeObjects() {
     marsMesh = new THREE.Mesh( marsGeometry, marsMaterial );
 
     /*
+    Initialize Mercury with texture and basic geometry
+     */
+    mercuryGeometry = new THREE.SphereGeometry( marsSize, 64, 64 );
+    mercuryMaterial = new THREE.MeshPhongMaterial( { shininess: 5 } );
+    mercuryMaterial.map = THREE.ImageUtils.loadTexture( unixPath + 'mercurymap.jpg' );
+    mercuryMaterial.bumpMap = THREE.ImageUtils.loadTexture( unixPath + 'mercurymap_bump.jpg' );
+    mercuryMaterial.bumpScale = 0.10;
+    // a hint of red specular color
+    mercuryMaterial.specular = new THREE.Color( 0x110000 );
+
+    mercuryMesh = new THREE.Mesh( mercuryGeometry, mercuryMaterial );
+
+    /*
+    Initialize Venus with texture and basic geometry
+     */
+    venusGeometry = new THREE.SphereGeometry( venusSize, 64, 64 );
+    venusMaterial = new THREE.MeshPhongMaterial( { shininess: 5 } );
+    venusMaterial.map = THREE.ImageUtils.loadTexture( unixPath + 'venusmap.jpg' );
+    venusMaterial.bumpMap = THREE.ImageUtils.loadTexture( unixPath + 'venusmap_bump.jpg' );
+    venusMaterial.bumpScale = 0.12;
+    // a hint of red specular color
+    venusMaterial.specular = new THREE.Color( 0x110000 );
+
+    venusMesh = new THREE.Mesh( venusGeometry, venusMaterial );
+
+    /*
      Initialize lights used in the simulator
      */
     ambientLight = new THREE.AmbientLight( 0x0f0f0f );
@@ -234,6 +263,8 @@ function setUpScene() {
     scene.add( jupiterMesh );
     scene.add( neptuneMesh );
     scene.add( marsMesh );
+    scene.add( mercuryMesh );
+    scene.add( venusMesh );
     scene.add( starfieldMesh );
 
     scene.add( ambientLight );
@@ -247,6 +278,8 @@ function setUpScene() {
     jupiterMesh.rotation.x = 3.13 * (Math.PI / 180);
     neptuneMesh.rotation.x = 28.32 * (Math.PI / 180);
     marsMesh.rotation.x = 1.85 * (Math.PI / 180);
+    mercuryMesh.rotation.x = 0.03 * (Math.PI / 180);
+    venusMesh.rotation.x = 177.36 * (Math.PI / 180);
 
     /*
      Orbital distances for the planets
@@ -255,18 +288,24 @@ function setUpScene() {
     earthOrbitDistance = 1496;
     // 778412010 / 100000 (prev sunSize + 1556.82)
     jupiterOrbitDistance = 7784.12;
-    // 4502960000 / 100000 - 25000 (otherwise it is way too far away)
+    // 4502960000 / 100000 - 25000 (otherwise it is way too far away. it only needs to be most faraway planet)
     neptuneOrbitDistance = 20209.6;
     // 227940000 / 100000
     marsOrbitDistance = 2279.4;
+    // 57909000 / 100000
+    mercuryOrbitDistance = 579.09;
+    // 108200000 / 100000
+    venusOrbitDistance = 1082;
 
     /*
      Test setup
      */
     jupiterMesh.position.x = sunSize + 100;
-    earthMesh.position.x = sunSize + jupiterSize + 200;
-    neptuneMesh.position.x = sunSize + jupiterSize + earthSize + 325;
-    marsMesh.position.x = sunSize + jupiterSize + earthSize + 375;
+    earthMesh.position.x = sunSize + jupiterSize + 150;
+    neptuneMesh.position.x = sunSize + jupiterSize + earthSize + 200;
+    marsMesh.position.x = sunSize + jupiterSize + earthSize + 250;
+    mercuryMesh.position.x = sunSize + jupiterSize + earthSize + marsSize + 275;
+    venusMesh.position.x = sunSize + jupiterSize + earthSize + marsSize + mercurySize + 325;
 } // end of setUpScene()
 
 function initGUI() {
@@ -275,21 +314,29 @@ function initGUI() {
         jupiter: false,
         neptune: false,
         mars: false,
+        mercury: false,
+        venus: false,
         animate: false,
         postprocess: false,
         reset: function () {
             jupiterMesh.position.x = sunSize + 100;
             jupiterMesh.position.y = 0;
             jupiterMesh.position.z = 0;
-            earthMesh.position.x = sunSize + jupiterSize + 200;
+            earthMesh.position.x = sunSize + jupiterSize + 150;
             earthMesh.position.y = 0;
             earthMesh.position.z = 0;
-            neptuneMesh.position.x = sunSize + jupiterSize + earthSize + 325;
+            neptuneMesh.position.x = sunSize + jupiterSize + earthSize + 200;
             neptuneMesh.position.y = 0;
             neptuneMesh.position.z = 0;
-            marsMesh.position.x = sunSize + jupiterSize + earthSize + 375;
+            marsMesh.position.x = sunSize + jupiterSize + earthSize + 250;
             marsMesh.position.y = 0;
             marsMesh.position.z = 0;
+            mercuryMesh.position.x = sunSize + jupiterSize + earthSize + marsSize + 275;
+            mercuryMesh.position.y = 0;
+            mercuryMesh.position.z = 0;
+            venusMesh.position.x = sunSize + jupiterSize + earthSize + marsSize + mercurySize + 325;
+            venusMesh.position.y = 0;
+            venusMesh.position.z = 0;
         },
         mv2earth: function () {
             camera.position.x = earthMesh.position.x + 15;
@@ -311,6 +358,16 @@ function initGUI() {
             camera.position.y = marsMesh.position.y;
             camera.position.z = marsMesh.position.z + 10;
         },
+        mv2mercury: function() {
+            camera.position.x = mercuryMesh.position.x + 5;
+            camera.position.y = mercuryMesh.position.y;
+            camera.position.z = mercuryMesh.position.z + 5;
+        },
+        mv2venus: function() {
+            camera.position.x = venusMesh.position.x + 10;
+            camera.position.y = venusMesh.position.y;
+            camera.position.z = venusMesh.position.z + 10;
+        },
         resetcam: function () {
             camera.position.x = 0;
             camera.position.y = 0;
@@ -324,6 +381,8 @@ function initGUI() {
     gui.add( effectController, "jupiter" ).name( "Lock on Jupiter" );
     gui.add( effectController, "neptune" ).name( "Lock on Neptune" );
     gui.add( effectController, "mars" ).name( "Lock on Mars" );
+    gui.add( effectController, "mercury" ).name( "Lock on Mercury" );
+    gui.add( effectController, "venus" ).name( "Lock on Venus" );
     gui.add( effectController, "animate" ).name( "Animate objects" );
     gui.add( effectController, "postprocess" ).name( "Post processing" );
     gui.add( effectController, "reset" ).name( "Reset positions" );
@@ -332,6 +391,8 @@ function initGUI() {
     gui.add( effectController, "mv2jupiter" ).name( "Move to jupiter" );
     gui.add( effectController, "mv2neptune" ).name( "Move to neptune" );
     gui.add( effectController, "mv2mars" ).name( "Move to mars" );
+    gui.add( effectController, "mv2mercury" ).name( "Move to mercury" );
+    gui.add( effectController, "mv2venus" ).name( "Move to venus" );
 }
 
 function initStats() {
@@ -356,55 +417,97 @@ function animate() {
         if ( jupiterMoveSpeed > 360 ) jupiterMoveSpeed = 0;
         if ( neptuneMoveSpeed > 360 ) neptuneMoveSpeed = 0;
         if ( marsMoveSpeed > 360 ) marsMoveSpeed = 0;
+        if ( mercuryMoveSpeed > 360 ) mercuryMoveSpeed = 0;
+        if ( venusMoveSpeed > 360 ) venusMoveSpeed = 0;
 
         earthMoveSpeed += 0.001;
         jupiterMoveSpeed += 0.000439;
         neptuneMoveSpeed += 0.000182;
         marsMoveSpeed += 0.000809;
+        mercuryMoveSpeed += 0.001607;
+        venusMoveSpeed += 0.001176;
 
         var earthCurrentX = earthMesh.position.x;
         var earthCurrentY = earthMesh.position.y;
+        var earthCurrentZ = earthMesh.position.z;
         var jupiterCurrentX = jupiterMesh.position.x;
         var jupiterCurrentY = jupiterMesh.position.y;
-        var neptuneCurrentY = neptuneMesh.position.y;
+        var jupiterCurrentZ = jupiterMesh.position.z;
         var neptuneCurrentX = neptuneMesh.position.x;
-        var marsCurrentY = marsMesh.position.y;
+        var neptuneCurrentY = neptuneMesh.position.y;
+        var neptuneCurrentZ = neptuneMesh.position.z;
         var marsCurrentX = marsMesh.position.x;
+        var marsCurrentY = marsMesh.position.y;
+        var marsCurrentZ = marsMesh.position.z;
+        var mercuryCurrentX = mercuryMesh.position.x;
+        var mercuryCurrentY = mercuryMesh.position.y;
+        var mercuryCurrentZ = mercuryMesh.position.z;
+        var venusCurrentX = venusMesh.position.x;
+        var venusCurrentY = venusMesh.position.y;
+        var venusCurrentZ = venusMesh.position.z;
 
         /*
         Planet movements each frame
          */
         earthMesh.position.x = earthOrbitDistance * Math.cos( earthMoveSpeed );
         earthMesh.position.y = earthOrbitDistance * Math.sin( earthMoveSpeed );
+//        earthMesh.position.z = ( sunSize / 360 * 0)   * Math.sin( earthMoveSpeed );
 
         jupiterMesh.position.x = jupiterOrbitDistance * Math.cos( jupiterMoveSpeed );
         jupiterMesh.position.y = jupiterOrbitDistance * Math.sin( jupiterMoveSpeed );
+        jupiterMesh.position.z = ( sunSize / 360 * 1.31 ) * Math.sin( jupiterMoveSpeed );
 
         neptuneMesh.position.x = neptuneOrbitDistance * Math.cos( neptuneMoveSpeed );
         neptuneMesh.position.y = neptuneOrbitDistance * Math.sin( neptuneMoveSpeed );
+        neptuneMesh.position.z = ( sunSize / 360 * 1.77 ) * Math.sin( neptuneMoveSpeed );
 
         marsMesh.position.x = marsOrbitDistance * Math.cos( marsMoveSpeed );
         marsMesh.position.y = marsOrbitDistance * Math.sin( marsMoveSpeed );
+        marsMesh.position.z = ( sunSize / 360 * 1.85 ) * Math.sin( marsMoveSpeed );
+
+        mercuryMesh.position.x = mercuryOrbitDistance * Math.cos( mercuryMoveSpeed );
+        mercuryMesh.position.y = mercuryOrbitDistance * Math.sin( mercuryMoveSpeed );
+        mercuryMesh.position.z = ( sunSize / 360 * 7.01 ) * Math.sin( mercuryMoveSpeed );
+
+        venusMesh.position.x = venusOrbitDistance * Math.cos( venusMoveSpeed );
+        venusMesh.position.y = venusOrbitDistance * Math.sin( venusMoveSpeed );
+        venusMesh.position.z = ( sunSize / 360 * 3.39 ) * Math.sin( venusMoveSpeed );
 
         if ( effectController.earth === true ) {
             camera.position.x += earthMesh.position.x - earthCurrentX;
             camera.position.y += earthMesh.position.y - earthCurrentY;
+            camera.position.z += earthMesh.position.z - earthCurrentZ;
             controls.target.set( earthMesh.position.x, earthMesh.position.y, earthMesh.position.z );
         }
         else if ( effectController.jupiter === true ) {
             camera.position.x += jupiterMesh.position.x - jupiterCurrentX;
             camera.position.y += jupiterMesh.position.y - jupiterCurrentY;
+            camera.position.z += jupiterMesh.position.z - jupiterCurrentZ;
             controls.target.set( jupiterMesh.position.x, jupiterMesh.position.y, jupiterMesh.position.z );
         }
         else if ( effectController.neptune === true ) {
             camera.position.x += neptuneMesh.position.x - neptuneCurrentX;
             camera.position.y += neptuneMesh.position.y - neptuneCurrentY;
+            camera.position.z += neptuneMesh.position.z - neptuneCurrentZ;
             controls.target.set( neptuneMesh.position.x, neptuneMesh.position.y, neptuneMesh.position.z );
         }
         else if ( effectController.mars === true ) {
             camera.position.x += marsMesh.position.x - marsCurrentX;
             camera.position.y += marsMesh.position.y - marsCurrentY;
+            camera.position.z += marsMesh.position.z - marsCurrentZ;
             controls.target.set( marsMesh.position.x, marsMesh.position.y, marsMesh.position.z );
+        }
+        else if ( effectController.mercury === true ) {
+            camera.position.x += mercuryMesh.position.x - mercuryCurrentX;
+            camera.position.y += mercuryMesh.position.y - mercuryCurrentY;
+            camera.position.z += mercuryMesh.position.z - mercuryCurrentZ;
+            controls.target.set( mercuryMesh.position.x, mercuryMesh.position.y, mercuryMesh.position.z );
+        }
+        else if ( effectController.venus === true ) {
+            camera.position.x += venusMesh.position.x - venusCurrentX;
+            camera.position.y += venusMesh.position.y - venusCurrentY;
+            camera.position.z += venusMesh.position.z - venusCurrentZ;
+            controls.target.set( venusMesh.position.x, venusMesh.position.y, venusMesh.position.z );
         }
     } // end of if
 
@@ -416,7 +519,9 @@ function animate() {
     jupiterMesh.rotation.y += 0.243 * (Math.PI / 180);
     neptuneMesh.rotation.y += 0.149 * (Math.PI / 180);
     marsMesh.rotation.y += 0.0972 * (Math.PI / 180);
-    sunMesh.rotation.y += 0.0003665;
+    mercuryMesh.rotation.y += 0.0017 * (Math.PI / 180);
+    venusMesh.rotation.y -= 0.00041 * (Math.PI / 180);
+    sunMesh.rotation.y += 0.003665 * (Math.PI / 180);
 
     uniforms.time.value += 0.1 * ( 20 * delta );
 

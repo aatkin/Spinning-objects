@@ -9,6 +9,7 @@
 ### Other stuff ###
 *.png
 *.jpg
+*.gif
 fireball.js
 keypress-1.0.8.min.js
 objects.js
